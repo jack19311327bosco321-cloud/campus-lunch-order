@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校園訂餐系統</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --primary-dark: #EE5A5A;
+            --secondary: #4ECDC4;
+            --accent: #FFE66D;
+            --dark: #2D3436;
+            --light: #F7F7F7;
+            --white: #FFFFFF;
+            --shadow: 0 8px 32px rgba(45, 52, 54, 0.12);
+            --shadow-hover: 0 16px 48px rgba(45, 52, 54, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* 頂部標題 */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header h1 {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--white);
+            text-shadow: 3px 3px 0 var(--primary), 6px 6px 0 rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            color: var(--white);
+            font-size: 1.1rem;
+            opacity: 0.9;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* 主要卡片 */
+        .card {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--shadow-hover);
+            animation: slideUp 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 步驟指示器 */
+        .steps {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            gap: 10px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .step.inactive {
+            background: var(--light);
+            color: #999;
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.3);
+        }
+
+        .step.inactive .step-number {
+            background: #ddd;
+            color: #999;
+        }
+
+        /* 頁面區塊 */
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* 學校選擇頁面 */
+        .schools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .school-card {
+            background: linear-gradient(145deg, var(--white), #f0f0f0);
+            border: 3px solid transparent;
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .school-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .school-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .school-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .school-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .school-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* 登入表單 */
+        .login-form {
+            max-width: 450px;
+            margin: 0 auto;
+        }
+
+        .selected-school {
+            background: linear-gradient(135deg, var(--secondary), #3DBDB5);
+            color: var(--white);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 3px solid #e0e0e0;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: var(--white);
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.15);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* 按鈕 */
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00B894, #00A383);
+            color: var(--white);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 184, 148, 0.5);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--accent), #FFD93D);
+            color: var(--dark);
+            box-shadow: 0 6px 20px rgba(255, 230, 109, 0.4);
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 230, 109, 0.5);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        /* 星期選擇器 */
+        .days-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .day-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--light);
+            border: 3px solid transparent;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .day-checkbox:hover {
+            background: #e8e8e8;
+            transform: translateY(-2px);
+        }
+
+        .day-checkbox.selected {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .day-check {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .day-checkbox.selected .day-check {
+            border-color: white;
+            background: white;
+        }
+
+        .day-checkbox.selected .day-check::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 6px;
+            width: 5px;
+            height: 10px;
+            border-right: 2px solid var(--primary);
+            border-bottom: 2px solid var(--primary);
+            transform: rotate(45deg);
+        }
+
+        .day-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* 餐單頁面 */
+        .menu-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .menu-header h2 {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            font-size: 2rem;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .date-display {
+            background: linear-gradient(135deg, var(--accent), #FFE066);
+            display: inline-block;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .meal-card {
+            background: linear-gradient(145deg, var(--white), #fafafa);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 3px solid transparent;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .meal-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--secondary);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .meal-card.selected {
+            border-color: var(--primary);
+            background: linear-gradient(145deg, #fff5f5, #ffe8e8);
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2), var(--shadow-hover);
+        }
+
+        .meal-card.selected::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 35px;
+            height: 35px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .meal-card.selected::before {
+            content: '';
+            position: absolute;
+            top: 22px;
+            right: 26px;
+            width: 12px;
+            height: 6px;
+            border-left: 3px solid white;
+            border-bottom: 3px solid white;
+            transform: rotate(-45deg);
+            z-index: 1;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .meal-image {
+            height: 120px;
+            background: linear-gradient(135deg, #f5f5f5, #e8e8e8);
+        }
+
+        .meal-info {
+            padding: 20px;
+        }
+
+        .meal-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .meal-desc {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .meal-price {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--primary);
+        }
+
+        .meal-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .tag {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .tag-hot { background: #ffebee; color: #c62828; }
+        .tag-veg { background: #e8f5e9; color: #2e7d32; }
+        .tag-rec { background: #fff3e0; color: #ef6c00; }
+
+        /* 管理員後台 */
+        .admin-panel {
+            display: none;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--light);
+            padding-bottom: 15px;
+        }
+
+        .admin-tab {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #999;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .admin-tab:hover {
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        .admin-tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+        }
+
+        .admin-content {
+            display: none;
+        }
+
+        .admin-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* 每日餐點選擇 */
+        .daily-meals-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .daily-meal-section {
+            background: var(--light);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .daily-meal-section:hover {
+            border-color: var(--secondary);
+        }
+
+        .daily-meal-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 20px;
+            background: var(--white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .daily-meal-header:hover {
+            background: #f8f8f8;
+        }
+
+        .day-toggle {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #ddd;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .day-toggle.active {
+            background: var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        .day-toggle.active::after {
+            content: '';
+            width: 6px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg) translate(-1px, -1px);
+        }
+
+        .day-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--dark);
+            flex: 1;
+        }
+
+        .day-status {
+            font-size: 0.9rem;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .daily-meal-options {
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .daily-meal-options.hidden {
+            display: none;
+        }
+
+        .daily-meal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+        }
+
+        .daily-meal-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 15px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .daily-meal-card:hover {
+            border-color: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .daily-meal-card.selected {
+            border-color: var(--primary);
+            background: linear-gradient(145deg, #fff5f5, #ffe8e8);
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+        }
+
+        .daily-meal-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .daily-meal-desc {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .daily-meal-price {
+            font-weight: 900;
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .daily-meal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .daily-tag {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* 餐單編輯 */
+        .menu-editor {
+            background: var(--light);
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        .meal-edit-item {
+            background: var(--white);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .meal-edit-item:hover {
+            border-color: var(--secondary);
+            box-shadow: var(--shadow);
+        }
+
+        .meal-edit-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .meal-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.1rem;
+        }
+
+        .meal-edit-fields {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .meal-edit-fields input, .meal-edit-fields select {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .meal-edit-fields input:focus, .meal-edit-fields select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 0.95rem;
+        }
+
+        /* 訂單統計 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, var(--white), #f5f5f5);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--secondary);
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 600;
+        }
+
+        /* 訂單列表 */
+        .orders-list {
+            background: var(--light);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .order-item {
+            background: var(--white);
+            padding: 20px;
+            border-bottom: 2px solid var(--light);
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 20px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .order-item:hover {
+            background: #fafafa;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-info {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .order-meal {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .order-time {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .order-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .status-pending { background: #fff3e0; color: #ef6c00; }
+        .status-confirmed { background: #e8f5e9; color: #2e7d32; }
+        .status-cancelled { background: #ffebee; color: #c62828; }
+
+        /* 成功頁面 */
+        .success-page {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #00B894, #00A383);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounce 1s ease infinite;
+        }
+
+        .success-icon::after {
+            content: '';
+            width: 30px;
+            height: 15px;
+            border-left: 4px solid white;
+            border-bottom: 4px solid white;
+            transform: rotate(-45deg) translate(2px, -2px);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .success-page h2 {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            font-size: 2.2rem;
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+
+        .success-page p {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .order-summary {
+            background: linear-gradient(145deg, var(--light), #e8e8e8);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            margin: 0 auto 30px;
+            text-align: left;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #ccc;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        /* 隱藏的管理員入口 */
+        .admin-trigger {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: white;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-trigger:hover {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.1);
+        }
+
+        /* 管理員登入彈窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            animation: slideUp 0.4s ease;
+        }
+
+        .modal h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* 響應式 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .schools-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .meal-edit-fields {
+                grid-template-columns: 1fr;
+            }
+
+            .order-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .steps {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .daily-meal-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .daily-meal-header {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 頂部標題 -->
+        <div class="header">
+            <h1>校園訂餐系統</h1>
+            <p>簡單、快速、美味的校園午餐訂購體驗</p>
+        </div>
+
+        <!-- 主要卡片 -->
+        <div class="card">
+            <!-- 步驟指示器 -->
+            <div class="steps">
+                <div class="step active" id="step1">
+                    <span class="step-number">1</span>
+                    <span>選擇學校</span>
+                </div>
+                <div class="step inactive" id="step2">
+                    <span class="step-number">2</span>
+                    <span>登入資料</span>
+                </div>
+                <div class="step inactive" id="step3">
+                    <span class="step-number">3</span>
+                    <span>選擇餐點</span>
+                </div>
+            </div>
+
+            <!-- 頁面 1: 選擇學校 -->
+            <div class="page active" id="page1">
+                <div class="schools-grid">
+                    <div class="school-card" onclick="selectSchool('83', '')">
+                        <span class="school-name">83</span>
+                    </div>
+                    <div class="school-card" onclick="selectSchool('世德', '')">
+                        <span class="school-name">世德</span>
+                    </div>
+                    <div class="school-card" onclick="selectSchool('亨澤', '')">
+                        <span class="school-name">亨澤</span>
+                    </div>
+                    <div class="school-card" onclick="selectSchool('吳祥川', '')">
+                        <span class="school-name">吳祥川</span>
+                    </div>
+                    <div class="school-card" onclick="selectSchool('呂明才', '')">
+                        <span class="school-name">呂明才</span>
+                    </div>
+                    <div class="school-card" onclick="selectSchool('李兆基', '')">
+                        <span class="school-name">李兆基</span>
+                    </div>
+                    <div class="school-card" onclick="selectSchool('周演森', '')">
+                        <span class="school-name">周演森</span>
+                    </div>
+                    <div class="school-card" onclick="selectSchool('梁植偉', '')">
+                        <span class="school-name">梁植偉</span>
+                    </div>
+                    <div class="school-card" onclick="selectSchool('瑪中', '')">
+                        <span class="school-name">瑪中</span>
+                    </div>
+                    <div class="school-card" onclick="selectSchool('崇真', '')">
+                        <span class="school-name">崇真</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 頁面 2: 登入資料 -->
+            <div class="page" id="page2">
+                <div class="login-form">
+                    <div class="selected-school">
+                        <span id="selectedSchoolName">請選擇學校</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>姓名</label>
+                        <input type="text" id="studentName" placeholder="請輸入你的姓名">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>班別</label>
+                            <select id="studentClass">
+                                <option value="">請選擇</option>
+                                <option value="1A">1A</option>
+                                <option value="1B">1B</option>
+                                <option value="1C">1C</option>
+                                <option value="1D">1D</option>
+                                <option value="2A">2A</option>
+                                <option value="2B">2B</option>
+                                <option value="2C">2C</option>
+                                <option value="2D">2D</option>
+                                <option value="3A">3A</option>
+                                <option value="3B">3B</option>
+                                <option value="3C">3C</option>
+                                <option value="3D">3D</option>
+                                <option value="4A">4A</option>
+                                <option value="4B">4B</option>
+                                <option value="4C">4C</option>
+                                <option value="4D">4D</option>
+                                <option value="5A">5A</option>
+                                <option value="5B">5B</option>
+                                <option value="5C">5C</option>
+                                <option value="5D">5D</option>
+                                <option value="6A">6A</option>
+                                <option value="6B">6B</option>
+                                <option value="6C">6C</option>
+                                <option value="6D">6D</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>學號</label>
+                            <input type="text" id="studentId" placeholder="例如: 2025001">
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="goToPage(1)">
+                            返回
+                        </button>
+                        <button class="btn btn-primary" onclick="login()">
+                            下一步
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 頁面 3: 選擇餐點 -->
+            <div class="page" id="page3">
+                <div class="menu-header">
+                    <h2>本週餐單</h2>
+                    <p style="color: #666; margin-top: 5px;">為每一天選擇你想吃的餐點</p>
+                </div>
+
+                <!-- 每日餐點選擇 -->
+                <div class="daily-meals-container" id="dailyMealsContainer">
+                    <!-- 每天的餐點選擇將由 JavaScript 動態生成 -->
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="goToPage(2)">
+                        返回
+                    </button>
+                    <button class="btn btn-success" onclick="confirmOrder()">
+                        確認訂購
+                    </button>
+                </div>
+            </div>
+
+            <!-- 頁面 4: 訂購成功 -->
+            <div class="page" id="page4">
+                <div class="success-page">
+                    <div class="success-icon"></div>
+                    <h2>訂購成功！</h2>
+                    <p>你的午餐訂單已確認，請準時到食堂領取</p>
+
+                    <div class="order-summary" id="orderSummary">
+                        <!-- 訂單摘要將由 JavaScript 動態生成 -->
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="resetOrder()">
+                            再訂一份
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 管理員後台 -->
+            <div class="admin-panel" id="adminPanel">
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="switchAdminTab('menu')">編輯餐單</button>
+                    <button class="admin-tab" onclick="switchAdminTab('orders')">訂單統計</button>
+                </div>
+
+                <!-- 編輯餐單 -->
+                <div class="admin-content active" id="adminMenu">
+                    <div class="menu-editor" id="menuEditor">
+                        <!-- 餐單編輯項目將由 JavaScript 動態生成 -->
+                    </div>
+                    <div class="edit-actions">
+                        <button class="btn btn-secondary btn-small" onclick="closeAdmin()">返回</button>
+                        <button class="btn btn-success btn-small" onclick="saveMenu()">儲存餐單</button>
+                    </div>
+                </div>
+
+                <!-- 訂單統計 -->
+                <div class="admin-content" id="adminOrders">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalOrders">0</div>
+                            <div class="stat-label">今日訂單</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalRevenue">$0</div>
+                            <div class="stat-label">預計收入</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="topMeal">-</div>
+                            <div class="stat-label">最受歡迎</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-bottom: 20px; color: var(--dark);">訂單列表</h3>
+                    <div class="orders-list" id="ordersList">
+                        <!-- 訂單列表將由 JavaScript 動態生成 -->
+                    </div>
+
+                    <div class="edit-actions">
+                        <button class="btn btn-secondary btn-small" onclick="closeAdmin()">返回</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理員入口 -->
+    <div class="admin-trigger" onclick="openAdminLogin()" title="管理員入口">
+        管理
+    </div>
+
+    <!-- 管理員登入彈窗 -->
+    <div class="modal-overlay" id="adminLoginModal">
+        <div class="modal">
+            <h3>管理員登入</h3>
+            <div class="form-group">
+                <label>密碼</label>
+                <input type="password" id="adminPassword" placeholder="請輸入管理員密碼">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="closeAdminLogin()">取消</button>
+                <button class="btn btn-primary" onclick="adminLogin()">登入</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局變量
+        let currentSchool = '';
+        let currentSchoolIcon = '';
+        let currentPage = 1;
+
+        // 每日餐單數據（可編輯）
+        const defaultMeals = [
+            { id: 1, name: '蜜汁叉燒飯', desc: '蜜汁叉燒', price: 45, tags: ['hot', 'rec'], tagNames: ['人氣之選', '廚師推薦'] },
+            { id: 2, name: '宮保雞丁飯', desc: '嫩滑雞丁 + 花生', price: 42, tags: ['rec'], tagNames: ['微辣'] },
+            { id: 3, name: '日式咖喱豬扒飯', desc: '香脆豬扒 + 濃郁咖喱', price: 48, tags: ['hot'], tagNames: ['人氣之選'] },
+            { id: 4, name: '麻婆豆腐飯', desc: '麻婆豆腐（全素）', price: 38, tags: ['veg'], tagNames: ['素食'] },
+            { id: 5, name: '黑椒牛柳飯', desc: '嫩滑牛柳 + 黑椒汁', price: 52, tags: ['rec'], tagNames: ['廚師推薦'] },
+            { id: 6, name: '時菜', desc: '新鮮時令蔬菜', price: 15, tags: ['veg'], tagNames: ['健康'] }
+        ];
+
+        // 每日餐單（星期一到五）
+        let weeklyMenu = {
+            mon: JSON.parse(JSON.stringify(defaultMeals)),
+            tue: JSON.parse(JSON.stringify(defaultMeals)),
+            wed: JSON.parse(JSON.stringify(defaultMeals)),
+            thu: JSON.parse(JSON.stringify(defaultMeals)),
+            fri: JSON.parse(JSON.stringify(defaultMeals))
+        };
+
+        // 當前顯示的餐單
+        let currentDayMenu = 'mon';
+        let menuData = weeklyMenu.mon;
+
+        // 每天選擇的餐點（key: day, value: mealId）
+        let selectedMealsByDay = {
+            mon: null,
+            tue: null,
+            wed: null,
+            thu: null,
+            fri: null
+        };
+
+        // 星期幾選擇（是否啟用該天）
+        let selectedDays = {
+            mon: true,
+            tue: true,
+            wed: true,
+            thu: true,
+            fri: true
+        };
+
+        // 訂單數據
+        let orders = [];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                updateDate();
+                loadData();
+                renderMenu();
+                renderMenuEditor();
+            } catch (e) {
+                console.error('初始化錯誤:', e);
+            }
+        });
+
+        // 更新日期顯示
+        function updateDate() {
+            const now = new Date();
+            const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${days[now.getDay()]}`;
+            const dateEl = document.getElementById('currentDate');
+            if (dateEl) dateEl.textContent = dateStr;
+        }
+
+        // 選擇學校
+        function selectSchool(schoolName, icon) {
+            currentSchool = schoolName;
+            currentSchoolIcon = icon;
+            document.getElementById('selectedSchoolName').textContent = schoolName;
+            goToPage(2);
+        }
+
+        // 切換頁面
+        function goToPage(page) {
+            // 隱藏所有頁面
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('adminPanel').classList.remove('active');
+
+            // 顯示目標頁面
+            document.getElementById('page' + page).classList.add('active');
+
+            // 更新步驟指示器
+            document.querySelectorAll('.step').forEach((step, index) => {
+                if (index < page && page <= 3) {
+                    step.classList.remove('inactive');
+                    step.classList.add('active');
+                } else if (page <= 3) {
+                    step.classList.remove('active');
+                    step.classList.add('inactive');
+                }
+            });
+
+            currentPage = page;
+        }
+
+        // 登入
+        function login() {
+            const name = document.getElementById('studentName').value.trim();
+            const className = document.getElementById('studentClass').value;
+            const id = document.getElementById('studentId').value.trim();
+
+            if (!name || !className || !id) {
+                alert('請填寫所有資料！');
+                return;
+            }
+
+            // 渲染每日餐點選擇
+            renderDailyMeals();
+            goToPage(3);
+        }
+
+        // 渲染每日餐點選擇
+        function renderDailyMeals() {
+            const container = document.getElementById('dailyMealsContainer');
+            const dayNames = { mon: '星期一', tue: '星期二', wed: '星期三', thu: '星期四', fri: '星期五' };
+
+            let html = '';
+            ['mon', 'tue', 'wed', 'thu', 'fri'].forEach(day => {
+                const dayMenu = weeklyMenu[day];
+                const selectedMealId = selectedMealsByDay[day];
+
+                html += `
+                    <div class="daily-meal-section" id="day-section-${day}">
+                        <div class="daily-meal-header" onclick="toggleDaySection('${day}')">
+                            <div class="day-toggle ${selectedDays[day] ? 'active' : ''}" id="day-toggle-${day}"></div>
+                            <span class="day-title">${dayNames[day]}</span>
+                            <span class="day-status" id="day-status-${day}">${selectedDays[day] ? (selectedMealId ? '已選擇' : '請選擇餐點') : '跳過這天'}</span>
+                        </div>
+                        <div class="daily-meal-options ${selectedDays[day] ? '' : 'hidden'}" id="day-options-${day}">
+                            <div class="daily-meal-grid">
+                                ${dayMenu.map(meal => `
+                                    <div class="daily-meal-card ${selectedMealId === meal.id ? 'selected' : ''}"
+                                         onclick="selectMealForDay('${day}', ${meal.id})">
+                                        <div class="daily-meal-name">${meal.name}</div>
+                                        <div class="daily-meal-desc">${meal.desc}</div>
+                                        <div class="daily-meal-price">$${meal.price}</div>
+                                        <div class="daily-meal-tags">
+                                            ${meal.tags.map((tag, i) => `
+                                                <span class="daily-tag tag-${tag}">${meal.tagNames[i]}</span>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 切換某天是否訂餐
+        function toggleDaySection(day) {
+            selectedDays[day] = !selectedDays[day];
+
+            const toggleEl = document.getElementById(`day-toggle-${day}`);
+            const optionsEl = document.getElementById(`day-options-${day}`);
+            const statusEl = document.getElementById(`day-status-${day}`);
+
+            if (selectedDays[day]) {
+                toggleEl.classList.add('active');
+                optionsEl.classList.remove('hidden');
+                statusEl.textContent = selectedMealsByDay[day] ? '已選擇' : '請選擇餐點';
+            } else {
+                toggleEl.classList.remove('active');
+                optionsEl.classList.add('hidden');
+                statusEl.textContent = '跳過這天';
+            }
+        }
+
+        // 為某天選擇餐點
+        function selectMealForDay(day, mealId) {
+            selectedMealsByDay[day] = mealId;
+
+            // 更新該天的顯示
+            const statusEl = document.getElementById(`day-status-${day}`);
+            if (statusEl) {
+                statusEl.textContent = '已選擇';
+            }
+
+            // 重新渲染該天的餐點選項以顯示選中狀態
+            renderDailyMeals();
+        }
+
+        // 切換星期選擇
+        function toggleDay(day) {
+            selectedDays[day] = !selectedDays[day];
+            const dayEl = document.getElementById('day-' + day);
+            if (selectedDays[day]) {
+                dayEl.classList.add('selected');
+            } else {
+                dayEl.classList.remove('selected');
+            }
+            // 更新餐單顯示（顯示第一個選中的日子的餐單）
+            updateMenuDisplay();
+        }
+
+        // 更新餐單顯示
+        function updateMenuDisplay() {
+            const selectedDayList = Object.keys(selectedDays).filter(d => selectedDays[d]);
+            const dayNames = { mon: '星期一', tue: '星期二', wed: '星期三', thu: '星期四', fri: '星期五' };
+
+            if (selectedDayList.length > 0) {
+                // 顯示第一個選中的日子的餐單
+                currentDayMenu = selectedDayList[0];
+                menuData = weeklyMenu[currentDayMenu];
+                renderMenu();
+
+                // 更新顯示目前查看的餐單
+                const menuDayEl = document.getElementById('currentMenuDay');
+                if (menuDayEl) {
+                    menuDayEl.textContent = `正在查看：${dayNames[currentDayMenu]} 餐單`;
+                }
+            } else {
+                const menuDayEl = document.getElementById('currentMenuDay');
+                if (menuDayEl) {
+                    menuDayEl.textContent = '';
+                }
+            }
+        }
+
+        // 選擇餐點
+        function selectMeal(mealId) {
+            selectedMeal = mealId;
+            renderMenu();
+        }
+
+        // 渲染餐單（確保選中狀態正確顯示）
+        function renderMenu() {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = menuData.map(meal => `
+                <div class="meal-card ${selectedMeal === meal.id ? 'selected' : ''}" onclick="selectMeal(${meal.id})">
+                    <div class="meal-info">
+                        <div class="meal-name">${meal.name}</div>
+                        <div class="meal-desc">${meal.desc}</div>
+                        <div class="meal-price">$${meal.price}</div>
+                        <div class="meal-tags">
+                            ${meal.tags.map((tag, i) => `
+                                <span class="tag tag-${tag}">${meal.tagNames[i]}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 確認訂購
+        function confirmOrder() {
+            // 檢查是否有選擇要訂餐的日子
+            const selectedDayList = Object.keys(selectedDays).filter(d => selectedDays[d]);
+            if (selectedDayList.length === 0) {
+                alert('請至少選擇一天訂餐！');
+                return;
+            }
+
+            // 檢查每個選中的日子是否都有選擇餐點
+            const missingMealDays = selectedDayList.filter(day => !selectedMealsByDay[day]);
+            if (missingMealDays.length > 0) {
+                const dayNames = { mon: '星期一', tue: '星期二', wed: '星期三', thu: '星期四', fri: '星期五' };
+                alert(`請為以下日子選擇餐點：${missingMealDays.map(d => dayNames[d]).join('、')}`);
+                return;
+            }
+
+            const name = document.getElementById('studentName').value.trim();
+            const className = document.getElementById('studentClass').value;
+
+            const dayNames = {
+                mon: '星期一',
+                tue: '星期二',
+                wed: '星期三',
+                thu: '星期四',
+                fri: '星期五'
+            };
+
+            let totalPrice = 0;
+            let orderDetails = [];
+
+            // 為每一天創建訂單
+            selectedDayList.forEach(day => {
+                const dayMenu = weeklyMenu[day];
+                const selectedMealId = selectedMealsByDay[day];
+                const selectedMealForDay = dayMenu.find(m => m.id === selectedMealId);
+
+                const order = {
+                    id: Date.now() + Math.random(),
+                    school: currentSchool,
+                    name: name,
+                    class: className,
+                    meal: selectedMealForDay.name,
+                    day: dayNames[day],
+                    price: selectedMealForDay.price,
+                    time: new Date().toLocaleString('zh-HK'),
+                    status: 'confirmed'
+                };
+                orders.push(order);
+                totalPrice += selectedMealForDay.price;
+                orderDetails.push({ day: dayNames[day], meal: selectedMealForDay.name, price: selectedMealForDay.price });
+            });
+
+            saveData();
+
+            // 顯示訂單摘要
+            let orderDetailsHtml = orderDetails.map(o => `
+                <div class="summary-row">
+                    <span>${o.day}</span>
+                    <span>${o.meal} ($${o.price})</span>
+                </div>
+            `).join('');
+
+            document.getElementById('orderSummary').innerHTML = `
+                <div class="summary-row">
+                    <span>學校</span>
+                    <span>${currentSchool}</span>
+                </div>
+                <div class="summary-row">
+                    <span>姓名</span>
+                    <span>${name}</span>
+                </div>
+                <div class="summary-row">
+                    <span>班別</span>
+                    <span>${className}</span>
+                </div>
+                ${orderDetailsHtml}
+                <div class="summary-row" style="border-top: 2px solid var(--primary); margin-top: 10px; padding-top: 15px;">
+                    <span>總價</span>
+                    <span>$${totalPrice}</span>
+                </div>
+            `;
+
+            goToPage(4);
+        }
+
+        // 重置訂單
+        function resetOrder() {
+            selectedMealsByDay = { mon: null, tue: null, wed: null, thu: null, fri: null };
+            selectedDays = { mon: true, tue: true, wed: true, thu: true, fri: true };
+            currentDayMenu = 'mon';
+            menuData = weeklyMenu.mon;
+            document.getElementById('studentName').value = '';
+            document.getElementById('studentClass').value = '';
+            document.getElementById('studentId').value = '';
+            goToPage(1);
+        }
+
+        // ========== 管理員功能 ==========
+
+        // 打開管理員登入
+        function openAdminLogin() {
+            document.getElementById('adminLoginModal').classList.add('active');
+            document.getElementById('adminPassword').value = '';
+        }
+
+        // 關閉管理員登入
+        function closeAdminLogin() {
+            document.getElementById('adminLoginModal').classList.remove('active');
+        }
+
+        // 管理員登入
+        function adminLogin() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === 'admin123') {  // 簡單密碼，實際使用應更安全
+                closeAdminLogin();
+                showAdminPanel();
+            } else {
+                alert('密碼錯誤！');
+            }
+        }
+
+        // 顯示管理員面板
+        function showAdminPanel() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('adminPanel').classList.add('active');
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            renderMenuEditor();
+            renderOrdersList();
+        }
+
+        // 關閉管理員面板
+        function closeAdmin() {
+            document.getElementById('adminPanel').classList.remove('active');
+            goToPage(1);
+        }
+
+        // 切換管理員標籤
+        function switchAdminTab(tab) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById('admin' + (tab === 'menu' ? 'Menu' : 'Orders')).classList.add('active');
+
+            if (tab === 'orders') {
+                renderOrdersList();
+            } else if (tab === 'menu') {
+                renderMenuEditor();
+            }
+        }
+
+        // 渲染餐單編輯器
+        function renderMenuEditor() {
+            const editor = document.getElementById('menuEditor');
+            const dayNames = { mon: '星期一', tue: '星期二', wed: '星期三', thu: '星期四', fri: '星期五' };
+
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: 700; margin-right: 10px;">選擇要編輯的日子：</label>
+                    <select id="editDaySelect" onchange="switchEditDay(this.value)" style="padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem;">
+                        <option value="mon" ${currentDayMenu === 'mon' ? 'selected' : ''}>星期一</option>
+                        <option value="tue" ${currentDayMenu === 'tue' ? 'selected' : ''}>星期二</option>
+                        <option value="wed" ${currentDayMenu === 'wed' ? 'selected' : ''}>星期三</option>
+                        <option value="thu" ${currentDayMenu === 'thu' ? 'selected' : ''}>星期四</option>
+                        <option value="fri" ${currentDayMenu === 'fri' ? 'selected' : ''}>星期五</option>
+                    </select>
+                </div>
+                <h3 style="margin-bottom: 20px; color: var(--dark);">${dayNames[currentDayMenu]} 餐單</h3>
+            `;
+
+            html += menuData.map((meal, index) => `
+                <div class="meal-edit-item">
+                    <div class="meal-edit-header">
+                        <div class="meal-number">${index + 1}</div>
+                        <span style="font-weight: 700; font-size: 1.1rem;">餐點 ${index + 1}</span>
+                    </div>
+                    <div class="meal-edit-fields">
+                        <input type="text" id="mealName${index}" value="${meal.name}" placeholder="餐點名稱">
+                        <input type="number" id="mealPrice${index}" value="${meal.price}" placeholder="價格">
+                        <select id="mealTag${index}">
+                            <option value="hot,rec|人氣之選,廚師推薦" ${meal.tags.includes('hot') && meal.tags.includes('rec') ? 'selected' : ''}>人氣+推薦</option>
+                            <option value="hot|人氣之選" ${meal.tags.includes('hot') && !meal.tags.includes('rec') ? 'selected' : ''}>人氣之選</option>
+                            <option value="rec|廚師推薦" ${meal.tags.includes('rec') && !meal.tags.includes('hot') ? 'selected' : ''}>廚師推薦</option>
+                            <option value="veg|素食" ${meal.tags.includes('veg') ? 'selected' : ''}>素食</option>
+                            <option value="|" ${!meal.tags.includes('hot') && !meal.tags.includes('rec') && !meal.tags.includes('veg') ? 'selected' : ''}>無標籤</option>
+                        </select>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <input type="text" id="mealDesc${index}" value="${meal.desc}" placeholder="餐點描述" style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-family: inherit; font-size: 1rem;">
+                    </div>
+                </div>
+            `).join('');
+
+            editor.innerHTML = html;
+        }
+
+        // 切換編輯的日子
+        function switchEditDay(day) {
+            currentDayMenu = day;
+            menuData = weeklyMenu[day];
+            renderMenuEditor();
+        }
+
+        // 儲存餐單
+        function saveMenu() {
+            for (let i = 0; i < menuData.length; i++) {
+                menuData[i].name = document.getElementById(`mealName${i}`).value;
+                menuData[i].price = parseInt(document.getElementById(`mealPrice${i}`).value);
+                menuData[i].desc = document.getElementById(`mealDesc${i}`).value;
+
+                // 處理標籤
+                const tagValue = document.getElementById(`mealTag${i}`).value;
+                if (tagValue) {
+                    const [tags, tagNames] = tagValue.split('|');
+                    menuData[i].tags = tags ? tags.split(',') : [];
+                    menuData[i].tagNames = tagNames ? tagNames.split(',') : [];
+                } else {
+                    menuData[i].tags = [];
+                    menuData[i].tagNames = [];
+                }
+            }
+
+            saveData();
+            renderMenu();
+            alert(`${document.getElementById('editDaySelect').options[document.getElementById('editDaySelect').selectedIndex].text} 餐單已儲存！`);
+        }
+
+        // 渲染訂單列表
+        function renderOrdersList() {
+            const list = document.getElementById('ordersList');
+            const totalOrders = orders.length;
+            const totalRevenue = orders.reduce((sum, o) => sum + o.price, 0);
+
+            // 計算最受歡迎餐點
+            const mealCounts = {};
+            orders.forEach(o => {
+                mealCounts[o.meal] = (mealCounts[o.meal] || 0) + 1;
+            });
+            const topMeal = Object.entries(mealCounts).sort((a, b) => b[1] - a[1])[0];
+
+            document.getElementById('totalOrders').textContent = totalOrders;
+            document.getElementById('totalRevenue').textContent = '$' + totalRevenue;
+            document.getElementById('topMeal').textContent = topMeal ? topMeal[0].split('').slice(0, 4).join('') + '...' : '-';
+
+            if (orders.length === 0) {
+                list.innerHTML = '<div style="padding: 40px; text-align: center; color: #999;">暫無訂單</div>';
+                return;
+            }
+
+            list.innerHTML = orders.slice().reverse().map(order => `
+                <div class="order-item">
+                    <div>
+                        <div class="order-info">${order.school} - ${order.name}</div>
+                        <div style="color: #999; font-size: 0.9rem;">${order.class} | ${order.day || '未指定'}</div>
+                    </div>
+                    <div class="order-meal">${order.meal}</div>
+                    <div class="order-time">${order.time}</div>
+                    <span class="order-status status-${order.status}">
+                        ${order.status === 'confirmed' ? '已確認' : order.status === 'pending' ? '待處理' : '已取消'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // 數據持久化（使用 localStorage）
+        function saveData() {
+            localStorage.setItem('schoolWeeklyMenu', JSON.stringify(weeklyMenu));
+            localStorage.setItem('schoolOrders', JSON.stringify(orders));
+        }
+
+        function loadData() {
+            const savedMenu = localStorage.getItem('schoolWeeklyMenu');
+            const savedOrders = localStorage.getItem('schoolOrders');
+
+            if (savedMenu) {
+                weeklyMenu = JSON.parse(savedMenu);
+                menuData = weeklyMenu[currentDayMenu];
+            }
+            if (savedOrders) {
+                orders = JSON.parse(savedOrders);
+            }
+        }
+
+        // 點擊彈窗外部關閉
+        document.getElementById('adminLoginModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAdminLogin();
+            }
+        });
+    </script>
+</body>
+</html>
