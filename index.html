@@ -713,6 +713,54 @@
             font-weight: 600;
         }
 
+        /* 時菜加購 */
+        .veg-add-on {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: #f0faf5;
+            border: 2px dashed #4ECDC4;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        .veg-add-on:hover {
+            background: #e0f7ef;
+            border-color: #3dbeb5;
+        }
+        .veg-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #4ECDC4;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--white);
+            background: var(--white);
+            transition: all 0.2s ease;
+        }
+        .veg-checkbox.checked {
+            background: var(--secondary);
+            border-color: var(--secondary);
+        }
+        .veg-label {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+        .veg-price {
+            margin-left: auto;
+            color: var(--secondary);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
         /* 餐單編輯 */
         .menu-editor {
             background: var(--light);
@@ -1202,6 +1250,9 @@
                     </div>
 
                     <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="copyOrderText()">
+                            複製訂單
+                        </button>
                         <button class="btn btn-primary" onclick="resetOrder()">
                             再訂一份
                         </button>
@@ -1289,9 +1340,11 @@
             { id: 2, name: '宮保雞丁飯', desc: '嫩滑雞丁 + 花生', price: 42, tags: ['rec'], tagNames: ['微辣'] },
             { id: 3, name: '日式咖喱豬扒飯', desc: '香脆豬扒 + 濃郁咖喱', price: 48, tags: ['hot'], tagNames: ['人氣之選'] },
             { id: 4, name: '麻婆豆腐飯', desc: '麻婆豆腐（全素）', price: 38, tags: ['veg'], tagNames: ['素食'] },
-            { id: 5, name: '黑椒牛柳飯', desc: '嫩滑牛柳 + 黑椒汁', price: 52, tags: ['rec'], tagNames: ['廚師推薦'] },
-            { id: 6, name: '時菜', desc: '新鮮時令蔬菜', price: 15, tags: ['veg'], tagNames: ['健康'] }
+            { id: 5, name: '黑椒牛柳飯', desc: '嫩滑牛柳 + 黑椒汁', price: 52, tags: ['rec'], tagNames: ['廚師推薦'] }
         ];
+
+        // 時菜加購價
+        const vegAddOn = { name: '加購時菜', price: 15 };
 
         // 每日餐單（星期一到五）
         let weeklyMenu = {
@@ -1313,6 +1366,15 @@
             wed: null,
             thu: null,
             fri: null
+        };
+
+        // 每天是否加購時菜（key: day, value: boolean）
+        let addVegByDay = {
+            mon: false,
+            tue: false,
+            wed: false,
+            thu: false,
+            fri: false
         };
 
         // 星期幾選擇（是否啟用該天）
@@ -1404,13 +1466,14 @@
             ['mon', 'tue', 'wed', 'thu', 'fri'].forEach(day => {
                 const dayMenu = weeklyMenu[day];
                 const selectedMealId = selectedMealsByDay[day];
+                const hasVeg = addVegByDay[day];
 
                 html += `
                     <div class="daily-meal-section" id="day-section-${day}">
                         <div class="daily-meal-header" onclick="toggleDaySection('${day}')">
                             <div class="day-toggle ${selectedDays[day] ? 'active' : ''}" id="day-toggle-${day}"></div>
                             <span class="day-title">${dayNames[day]}</span>
-                            <span class="day-status" id="day-status-${day}">${selectedDays[day] ? (selectedMealId ? '已選擇' : '請選擇餐點') : '跳過這天'}</span>
+                            <span class="day-status" id="day-status-${day}">${selectedDays[day] ? (selectedMealId ? '已選擇' + (hasVeg ? ' + 時菜' : '') : '請選擇餐點') : '跳過這天'}</span>
                         </div>
                         <div class="daily-meal-options ${selectedDays[day] ? '' : 'hidden'}" id="day-options-${day}">
                             <div class="daily-meal-grid">
@@ -1427,6 +1490,13 @@
                                         </div>
                                     </div>
                                 `).join('')}
+                            </div>
+                            <div class="veg-add-on" onclick="toggleVegForDay('${day}', event)">
+                                <div class="veg-checkbox ${hasVeg ? 'checked' : ''}" id="veg-check-${day}">
+                                    ${hasVeg ? '&#10003;' : ''}
+                                </div>
+                                <span class="veg-label">${vegAddOn.name}</span>
+                                <span class="veg-price">+$${vegAddOn.price}</span>
                             </div>
                         </div>
                     </div>
@@ -1462,10 +1532,24 @@
             // 更新該天的顯示
             const statusEl = document.getElementById(`day-status-${day}`);
             if (statusEl) {
-                statusEl.textContent = '已選擇';
+                statusEl.textContent = '已選擇' + (addVegByDay[day] ? ' + 時菜' : '');
             }
 
             // 重新渲染該天的餐點選項以顯示選中狀態
+            renderDailyMeals();
+        }
+
+        // 切換某天加購時菜
+        function toggleVegForDay(day, event) {
+            event.stopPropagation();
+            addVegByDay[day] = !addVegByDay[day];
+
+            // 更新狀態顯示
+            const statusEl = document.getElementById(`day-status-${day}`);
+            if (statusEl && selectedMealsByDay[day]) {
+                statusEl.textContent = '已選擇' + (addVegByDay[day] ? ' + 時菜' : '');
+            }
+
             renderDailyMeals();
         }
 
@@ -1567,30 +1651,43 @@
                 const dayMenu = weeklyMenu[day];
                 const selectedMealId = selectedMealsByDay[day];
                 const selectedMealForDay = dayMenu.find(m => m.id === selectedMealId);
+                const hasVeg = addVegByDay[day];
+                const dayPrice = selectedMealForDay.price + (hasVeg ? vegAddOn.price : 0);
 
                 const order = {
                     id: Date.now() + Math.random(),
                     school: currentSchool,
                     name: name,
                     class: className,
-                    meal: selectedMealForDay.name,
+                    meal: selectedMealForDay.name + (hasVeg ? ' + 時菜' : ''),
                     day: dayNames[day],
-                    price: selectedMealForDay.price,
+                    price: dayPrice,
+                    hasVeg: hasVeg,
                     time: new Date().toLocaleString('zh-HK'),
                     status: 'confirmed'
                 };
                 orders.push(order);
-                totalPrice += selectedMealForDay.price;
-                orderDetails.push({ day: dayNames[day], meal: selectedMealForDay.name, price: selectedMealForDay.price });
+                totalPrice += dayPrice;
+                orderDetails.push({ day: dayNames[day], meal: selectedMealForDay.name, hasVeg: hasVeg, price: dayPrice });
             });
 
             saveData();
+
+            // 生成訂單文字
+            lastOrderText = `📋 校園訂餐訂單\n` +
+                `🏫 學校：${currentSchool}\n` +
+                `👤 姓名：${name}\n` +
+                `📌 班別：${className}\n` +
+                `━━━━━━━━━━━━━\n` +
+                orderDetails.map(o => `${o.day}：${o.meal}${o.hasVeg ? ' + 時菜' : ''} ($${o.price})`).join('\n') +
+                `\n━━━━━━━━━━━━━\n` +
+                `💰 總價：$${totalPrice}`;
 
             // 顯示訂單摘要
             let orderDetailsHtml = orderDetails.map(o => `
                 <div class="summary-row">
                     <span>${o.day}</span>
-                    <span>${o.meal} ($${o.price})</span>
+                    <span>${o.meal}${o.hasVeg ? ' <span style="color:var(--secondary);">+ 時菜</span>' : ''} ($${o.price})</span>
                 </div>
             `).join('');
 
@@ -1620,6 +1717,7 @@
         // 重置訂單
         function resetOrder() {
             selectedMealsByDay = { mon: null, tue: null, wed: null, thu: null, fri: null };
+            addVegByDay = { mon: false, tue: false, wed: false, thu: false, fri: false };
             selectedDays = { mon: true, tue: true, wed: true, thu: true, fri: true };
             currentDayMenu = 'mon';
             menuData = weeklyMenu.mon;
@@ -1627,6 +1725,27 @@
             document.getElementById('studentClass').value = '';
             document.getElementById('studentId').value = '';
             goToPage(1);
+        }
+
+        // 保存最近一次訂單文字
+        let lastOrderText = '';
+
+        // 複製訂單文字
+        function copyOrderText() {
+            if (lastOrderText) {
+                navigator.clipboard.writeText(lastOrderText).then(() => {
+                    alert('訂單已複製到剪貼簿！可以貼到 WhatsApp / Signal / Telegram 發送給朋友。');
+                }).catch(() => {
+                    // fallback
+                    const textarea = document.createElement('textarea');
+                    textarea.value = lastOrderText;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    alert('訂單已複製到剪貼簿！');
+                });
+            }
         }
 
         // ========== 管理員功能 ==========
