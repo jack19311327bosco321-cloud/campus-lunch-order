@@ -761,6 +761,38 @@
             font-size: 1rem;
         }
 
+        /* WhatsApp 按鈕 */
+        .btn-whatsapp {
+            width: 100%;
+            padding: 16px 24px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+        }
+        .btn-whatsapp:hover {
+            background: #1ebe5d;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+        }
+        .btn-whatsapp:active {
+            transform: translateY(0);
+        }
+        .whatsapp-icon {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
         /* 餐單編輯 */
         .menu-editor {
             background: var(--light);
@@ -1249,13 +1281,18 @@
                         <!-- 訂單摘要將由 JavaScript 動態生成 -->
                     </div>
 
-                    <div class="btn-group">
-                        <button class="btn btn-secondary" onclick="copyOrderText()">
-                            複製訂單
+                    <div class="btn-group" style="flex-direction: column; gap: 12px;">
+                        <button class="btn btn-whatsapp" onclick="sendToWhatsApp()">
+                            發送到 WhatsApp 確認訂單
                         </button>
-                        <button class="btn btn-primary" onclick="resetOrder()">
-                            再訂一份
-                        </button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="copyOrderText()">
+                                複製訂單
+                            </button>
+                            <button class="btn btn-primary" onclick="resetOrder()">
+                                再訂一份
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1674,14 +1711,14 @@
             saveData();
 
             // 生成訂單文字
-            lastOrderText = `📋 校園訂餐訂單\n` +
-                `🏫 學校：${currentSchool}\n` +
-                `👤 姓名：${name}\n` +
-                `📌 班別：${className}\n` +
-                `━━━━━━━━━━━━━\n` +
-                orderDetails.map(o => `${o.day}：${o.meal}${o.hasVeg ? ' + 時菜' : ''} ($${o.price})`).join('\n') +
-                `\n━━━━━━━━━━━━━\n` +
-                `💰 總價：$${totalPrice}`;
+            lastOrderText = `*校園訂餐訂單*\n` +
+                `學校：${currentSchool}\n` +
+                `姓名：${name}\n` +
+                `班別：${className}\n` +
+                `─────────────\n` +
+                orderDetails.map(o => `${o.day}：${o.meal}${o.hasVeg ? ' +時菜' : ''} ($${o.price})`).join('\n') +
+                `\n─────────────\n` +
+                `*總價：$${totalPrice}*`;
 
             // 顯示訂單摘要
             let orderDetailsHtml = orderDetails.map(o => `
@@ -1746,6 +1783,15 @@
                     alert('訂單已複製到剪貼簿！');
                 });
             }
+        }
+
+        // 發送訂單到 WhatsApp
+        function sendToWhatsApp() {
+            if (!lastOrderText) return;
+            const phone = '85268795508';
+            const encoded = encodeURIComponent(lastOrderText);
+            const url = `https://wa.me/${phone}?text=${encoded}`;
+            window.open(url, '_blank');
         }
 
         // ========== 管理員功能 ==========
