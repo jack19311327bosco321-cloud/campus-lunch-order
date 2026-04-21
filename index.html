@@ -1772,15 +1772,63 @@
             }
         }
 
-        // 為某天選擇鮮魚
+        // 更新某天的狀態文字（不重建DOM）
+        function updateDayStatus(day) {
+            const statusEl = document.getElementById('day-status-' + day);
+            if (!statusEl) return;
+            const dayMenu = weeklyMenu[day];
+            const selMeal = selectedMealsByDay[day];
+            const selFish = selectedFishByDay[day];
+            const selVeg = selectedVegByDay[day];
+            let statusText = '請選擇餐點';
+            if (!selectedDays[day]) {
+                statusText = '不用訂餐';
+            } else if (selMeal) {
+                statusText = dayMenu.find(m => m.id === selMeal).name;
+            } else if (selFish) {
+                statusText = fishMenu.find(f => f.id === selFish).name;
+            }
+            if (selVeg && selectedDays[day] && (selMeal || selFish)) statusText += ' + ' + vegOptions.find(v => v.id === selVeg).name;
+            statusEl.textContent = statusText;
+            // 更新魚餐觸發器狀態
+            const fishSub = document.getElementById('fish-sub-' + day);
+            if (fishSub) {
+                const fishTrigger = fishSub.previousElementSibling;
+                if (fishTrigger) {
+                    const fishStatus = fishTrigger.querySelector('.fish-status');
+                    if (fishStatus) fishStatus.textContent = selFish ? '已選：' + fishMenu.find(f => f.id === selFish).name : '點擊選擇';
+                }
+            }
+            // 更新時菜觸發器狀態
+            const vegSub = document.getElementById('veg-sub-' + day);
+            if (vegSub) {
+                const vegTrigger = vegSub.previousElementSibling;
+                if (vegTrigger) {
+                    const vegStatus = vegTrigger.querySelector('.fish-status');
+                    if (vegStatus) vegStatus.textContent = selVeg ? '已選：' + vegOptions.find(v => v.id === selVeg).name : '點擊選擇';
+                }
+            }
+        }
+
+        // 為某天選擇鮮魚（DOM局部更新）
         function selectFishForDay(day, fishId) {
             if (selectedFishByDay[day] === fishId) {
-                selectedFishByDay[day] = null; // 取消選擇
+                selectedFishByDay[day] = null;
             } else {
                 selectedFishByDay[day] = fishId;
-                selectedMealsByDay[day] = null; // 選魚就取消主餐
+                selectedMealsByDay[day] = null;
             }
-            renderDailyMeals();
+            // 更新魚餐卡片選中狀態
+            const fishSub = document.getElementById('fish-sub-' + day);
+            if (fishSub) fishSub.querySelectorAll('.daily-meal-card').forEach(c => c.classList.remove('selected'));
+            if (selectedFishByDay[day]) {
+                const cards = fishSub ? fishSub.querySelectorAll('.daily-meal-card') : [];
+                cards.forEach(c => { if (c.getAttribute('onclick') && c.getAttribute('onclick').includes("'" + fishId + "'")) c.classList.add('selected'); });
+            }
+            // 取消主餐選中
+            const optionsEl = document.getElementById('day-options-' + day);
+            if (optionsEl) optionsEl.querySelector('.daily-meal-grid').querySelectorAll('.daily-meal-card').forEach(c => c.classList.remove('selected'));
+            updateDayStatus(day);
         }
 
         // 切換時菜子選單
@@ -1796,14 +1844,19 @@
             }
         }
 
-        // 為某天選擇時菜
+        // 為某天選擇時菜（DOM局部更新）
         function selectVegForDay(day, vegId) {
             if (selectedVegByDay[day] === vegId) {
-                selectedVegByDay[day] = null; // 取消選擇
+                selectedVegByDay[day] = null;
             } else {
                 selectedVegByDay[day] = vegId;
             }
-            renderDailyMeals();
+            const vegSub = document.getElementById('veg-sub-' + day);
+            if (vegSub) vegSub.querySelectorAll('.daily-meal-card').forEach(c => c.classList.remove('selected'));
+            if (selectedVegByDay[day] && vegSub) {
+                vegSub.querySelectorAll('.daily-meal-card').forEach(c => { if (c.getAttribute('onclick') && c.getAttribute('onclick').includes("'" + vegId + "'")) c.classList.add('selected'); });
+            }
+            updateDayStatus(day);
         }
 
         // 切換某天是否訂餐
@@ -1832,15 +1885,26 @@
             }
         }
 
-        // 為某天選擇主餐
+        // 為某天選擇主餐（DOM局部更新）
         function selectMealForDay(day, mealId) {
             if (selectedMealsByDay[day] === mealId) {
-                selectedMealsByDay[day] = null; // 取消選擇
+                selectedMealsByDay[day] = null;
             } else {
                 selectedMealsByDay[day] = mealId;
-                selectedFishByDay[day] = null; // 選主餐就取消魚
+                selectedFishByDay[day] = null;
             }
-            renderDailyMeals();
+            // 更新主餐卡片選中狀態
+            const optionsEl = document.getElementById('day-options-' + day);
+            if (optionsEl) {
+                optionsEl.querySelector('.daily-meal-grid').querySelectorAll('.daily-meal-card').forEach(c => c.classList.remove('selected'));
+                if (selectedMealsByDay[day]) {
+                    optionsEl.querySelector('.daily-meal-grid').querySelectorAll('.daily-meal-card').forEach(c => { if (c.getAttribute('onclick') && c.getAttribute('onclick').includes("'" + mealId + "'")) c.classList.add('selected'); });
+                }
+            }
+            // 取消魚餐選中
+            const fishSub = document.getElementById('fish-sub-' + day);
+            if (fishSub) fishSub.querySelectorAll('.daily-meal-card').forEach(c => c.classList.remove('selected'));
+            updateDayStatus(day);
         }
 
         // 切換某天是否訂餐
