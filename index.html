@@ -1322,6 +1322,7 @@
                         <!-- 訂單摘要將由 JavaScript 動態生成 -->
                     </div>
 
+                    <div id="sheetStatus" style="display:none;text-align:center;font-size:0.95rem;"></div>
                     <div class="btn-group" style="flex-direction: column; gap: 12px;">
                         <button class="btn btn-whatsapp" onclick="sendToWhatsApp()">
                             發送到 WhatsApp 確認訂單
@@ -1938,29 +1939,42 @@
         }
 
         // 發送訂單到 Google Sheet
-        function sendOrderToSheet(name, className, studentId, details) {
-            const sheetData = {
-                school: currentSchool,
-                name: name,
-                class: className,
-                studentId: studentId,
-                orders: details.map(o => ({
-                    day: o.day,
-                    meal: o.meal,
-                    hasVeg: o.hasVeg,
-                    vegName: o.vegName || '',
-                    price: o.price
-                }))
-            };
+        async function sendOrderToSheet(name, className, studentId, details) {
+            const statusEl = document.getElementById('sheetStatus');
+            if (statusEl) {
+                statusEl.innerHTML = '<div style="color:#888;padding:8px 0;">正在記錄到試算表...</div>';
+                statusEl.style.display = 'block';
+            }
+            try {
+                const sheetData = {
+                    school: currentSchool,
+                    name: name,
+                    class: className,
+                    studentId: studentId,
+                    orders: details.map(o => ({
+                        day: o.day,
+                        meal: o.meal,
+                        hasVeg: o.hasVeg,
+                        vegName: o.vegName || '',
+                        price: o.price
+                    }))
+                };
 
-            fetch(SHEET_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(sheetData)
-            }).catch(function(err) {
+                const res = await fetch(SHEET_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sheetData)
+                });
+                const result = await res.text();
+                if (statusEl) {
+                    statusEl.innerHTML = '<div style="color:#2e7d32;padding:8px 0;font-weight:600;">✓ 已成功記錄到試算表</div>';
+                }
+            } catch (err) {
                 console.log('Sheet error:', err);
-            });
+                if (statusEl) {
+                    statusEl.innerHTML = '<div style="color:#c62828;padding:8px 0;">✗ 試算表記錄失敗，請截圖訂單聯絡老師</div>';
+                }
+            }
         }
 
         // 發送訂單到 WhatsApp
