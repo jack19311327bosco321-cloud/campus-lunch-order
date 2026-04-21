@@ -1710,6 +1710,9 @@
 
             saveData();
 
+            // 發送訂單到 Google Sheet
+            sendOrderToSheet(name, className, studentId, orderDetails);
+
             // 生成訂單文字
             lastOrderText = `*校園訂餐訂單*\n` +
                 `學校：${currentSchool}\n` +
@@ -1767,6 +1770,9 @@
         // 保存最近一次訂單文字
         let lastOrderText = '';
 
+        // Google Sheet Apps Script 網址
+        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzwP3qW7MB51Zwqqqhky-GtFs9M_U3EHWVJBjhBuN10l_Mn9qudUpjinPr9EqSMa7va/exec';
+
         // 複製訂單文字
         function copyOrderText() {
             if (lastOrderText) {
@@ -1783,6 +1789,31 @@
                     alert('訂單已複製到剪貼簿！');
                 });
             }
+        }
+
+        // 發送訂單到 Google Sheet
+        function sendOrderToSheet(name, className, studentId, details) {
+            const sheetData = {
+                school: currentSchool,
+                name: name,
+                class: className,
+                studentId: studentId,
+                orders: details.map(o => ({
+                    day: o.day,
+                    meal: o.meal,
+                    hasVeg: o.hasVeg,
+                    price: o.price
+                }))
+            };
+
+            fetch(SHEET_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sheetData)
+            }).catch(function(err) {
+                console.log('Sheet error:', err);
+            });
         }
 
         // 發送訂單到 WhatsApp
