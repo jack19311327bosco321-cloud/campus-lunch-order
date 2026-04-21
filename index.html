@@ -1814,6 +1814,7 @@
             selectedDayList.forEach(day => {
                 const dayMenu = weeklyMenu[day];
                 let mealName = '';
+                let mealCode = '';
                 let mealPrice = 0;
                 let hasVeg = false;
                 let vegName = '';
@@ -1821,10 +1822,12 @@
                 if (selectedMealsByDay[day]) {
                     const meal = dayMenu.find(m => m.id === selectedMealsByDay[day]);
                     mealName = meal.name;
+                    mealCode = meal.id;
                     mealPrice = meal.price;
                 } else if (selectedFishByDay[day]) {
                     const fish = fishMenu.find(f => f.id === selectedFishByDay[day]);
                     mealName = fish.name;
+                    mealCode = fish.id;
                     mealPrice = fish.price;
                 }
 
@@ -1849,7 +1852,7 @@
                 };
                 orders.push(order);
                 totalPrice += mealPrice;
-                orderDetails.push({ day: dayNames[day], meal: mealName, hasVeg: hasVeg, vegName: vegName, price: mealPrice });
+                orderDetails.push({ day: dayNames[day], meal: mealName, mealCode: mealCode, hasVeg: hasVeg, vegName: vegName, price: mealPrice });
             });
 
             saveData();
@@ -1954,6 +1957,7 @@
                     orders: details.map(o => ({
                         day: o.day,
                         meal: o.meal,
+                        mealCode: o.mealCode || '',
                         hasVeg: o.hasVeg,
                         vegName: o.vegName || '',
                         price: o.price
