@@ -764,6 +764,9 @@
         }
 
         /* 鮮魚/時菜子選單 */
+        .fish-sub-menu.hidden, .veg-sub-menu.hidden {
+            display: none;
+        }
         .fish-sub-menu, .veg-sub-menu {
             margin-top: 8px;
             padding: 0;
@@ -1642,8 +1645,16 @@
 
         // 切換鮮魚子選單
         function toggleFishMenu(day) {
+            const el = document.getElementById('fish-sub-' + day);
+            if (!el) return;
             expandedFishByDay[day] = !expandedFishByDay[day];
-            renderDailyMeals();
+            el.classList.toggle('hidden');
+            // 更新箭頭
+            const trigger = el.previousElementSibling;
+            if (trigger) {
+                const arrow = trigger.querySelector('.fish-arrow');
+                if (arrow) arrow.textContent = expandedFishByDay[day] ? '▲' : '▼';
+            }
         }
 
         // 為某天選擇鮮魚
@@ -1659,8 +1670,15 @@
 
         // 切換時菜子選單
         function toggleVegMenu(day) {
+            const el = document.getElementById('veg-sub-' + day);
+            if (!el) return;
             expandedVegByDay[day] = !expandedVegByDay[day];
-            renderDailyMeals();
+            el.classList.toggle('hidden');
+            const trigger = el.previousElementSibling;
+            if (trigger) {
+                const arrow = trigger.querySelector('.fish-arrow');
+                if (arrow) arrow.textContent = expandedVegByDay[day] ? '▲' : '▼';
+            }
         }
 
         // 為某天選擇時菜
