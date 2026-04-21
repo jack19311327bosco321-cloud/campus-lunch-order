@@ -1755,7 +1755,7 @@
             });
 
             container.innerHTML = html;
-            window.scrollTo(0, scrollY);
+            requestAnimationFrame(() => { window.scrollTo(0, scrollY); });
         }
 
         // 切換鮮魚子選單
