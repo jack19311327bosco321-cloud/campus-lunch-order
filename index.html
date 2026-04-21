@@ -635,10 +635,32 @@
             flex: 1;
         }
 
+        .day-date {
+            font-size: 0.9rem;
+            color: #999;
+            margin-left: 6px;
+            flex-shrink: 0;
+        }
+
         .day-status {
             font-size: 0.9rem;
             color: #999;
             font-weight: 500;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .disabled-day {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .disabled-day .daily-meal-header {
+            cursor: default;
+        }
+
+        .disabled-day .day-title {
+            color: #bbb;
         }
 
         .daily-meal-options {
@@ -1293,7 +1315,8 @@
             <div class="page" id="page3">
                 <div class="menu-header">
                     <h2>本週餐單</h2>
-                    <p style="color: #666; margin-top: 5px;">為每一天選擇你想吃的餐點</p>
+                    <p style="color: #666; margin-top: 5px;" id="weekRange"></p>
+                    <p style="color: #888; font-size: 0.9rem; margin-top: 3px;">點擊日期左邊的圓圈可以選擇「不用訂餐」</p>
                 </div>
 
                 <!-- 每日餐點選擇 -->
@@ -1488,8 +1511,56 @@
         let expandedFishByDay = { mon: false, tue: false, wed: false, thu: false, fri: false };
         let expandedVegByDay = { mon: false, tue: false, wed: false, thu: false, fri: false };
 
-        // 星期幾選擇（是否啟用該天）
-        let selectedDays = { mon: true, tue: true, wed: true, thu: true, fri: true };
+        // 計算本週星期一至五的日期
+        function getWeekDates() {
+            const now = new Date();
+            const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + mondayOffset);
+            const dates = {};
+            const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+            dayKeys.forEach((key, i) => {
+                const d = new Date(monday);
+                d.setDate(monday.getDate() + i);
+                dates[key] = d;
+            });
+            return dates;
+        }
+
+        const weekDates = getWeekDates();
+
+        // 判斷某天是否已過（不能再訂）
+        function isDayPast(dayKey) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const dayDate = weekDates[dayKey];
+            return dayDate < today;
+        }
+
+        // 格式化日期為 M/D
+        function formatDate(date) {
+            return (date.getMonth() + 1) + '/' + date.getDate();
+        }
+
+        // 取得可訂餐的星期 key 列表
+        function getAvailableDays() {
+            return ['mon', 'tue', 'wed', 'thu', 'fri'].filter(d => !isDayPast(d));
+        }
+
+        // 星期幾選擇（是否啟用該天訂餐，預設只有今天及之後的日子啟用）
+        let selectedDays = {};
+        (function initSelectedDays() {
+            const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+            dayKeys.forEach(d => {
+                selectedDays[d] = !isDayPast(d);
+            });
+            // 如果週末全部不可訂
+            const now = new Date().getDay();
+            if (now === 0 || now === 6) {
+                dayKeys.forEach(d => { selectedDays[d] = false; });
+            }
+        })();
 
         // 當前顯示的餐單
         let currentDayMenu = 'mon';
@@ -1563,6 +1634,17 @@
 
             // 渲染每日餐點選擇
             renderDailyMeals();
+
+            // 顯示本週日期範圍
+            const weekRangeEl = document.getElementById('weekRange');
+            if (weekRangeEl) {
+                const monDate = weekDates.mon;
+                const friDate = weekDates.fri;
+                const mStr = (monDate.getMonth() + 1) + '月' + monDate.getDate() + '日';
+                const fStr = (friDate.getMonth() + 1) + '月' + friDate.getDate() + '日';
+                weekRangeEl.textContent = mStr + ' - ' + fStr;
+            }
+
             goToPage(3);
         }
 
@@ -1570,15 +1652,39 @@
         function renderDailyMeals() {
             const container = document.getElementById('dailyMealsContainer');
             const dayNames = { mon: '星期一', tue: '星期二', wed: '星期三', thu: '星期四', fri: '星期五' };
+            const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+
+            // 檢查是否全部天數都已過
+            const availableDays = dayKeys.filter(d => !isDayPast(d));
+            if (availableDays.length === 0) {
+                container.innerHTML = '<div style="padding:40px;text-align:center;color:#999;font-size:1.1rem;">本週訂餐時間已過，請下週再來</div>';
+                return;
+            }
 
             let html = '';
-            ['mon', 'tue', 'wed', 'thu', 'fri'].forEach(day => {
+            dayKeys.forEach(day => {
+                const past = isDayPast(day);
                 const dayMenu = weeklyMenu[day];
                 const selMeal = selectedMealsByDay[day];
                 const selFish = selectedFishByDay[day];
                 const selVeg = selectedVegByDay[day];
                 const fishExpanded = expandedFishByDay[day];
                 const vegExpanded = expandedVegByDay[day];
+                const dateStr = formatDate(weekDates[day]);
+
+                // 已過的日子：顯示灰色
+                if (past) {
+                    html += `
+                    <div class="daily-meal-section disabled-day">
+                        <div class="daily-meal-header">
+                            <div class="day-toggle" style="background:#e0e0e0;"></div>
+                            <span class="day-title">${dayNames[day]}</span>
+                            <span class="day-date">${dateStr}</span>
+                            <span class="day-status" style="color:#bbb;">已過期</span>
+                        </div>
+                    </div>`;
+                    return;
+                }
 
                 // 主餐部分
                 const mealCards = dayMenu.map(meal => {
@@ -1621,16 +1727,22 @@
 
                 // 計算已選狀態文字
                 let statusText = '請選擇餐點';
-                if (selMeal) statusText = dayMenu.find(m => m.id === selMeal).name;
-                else if (selFish) statusText = fishMenu.find(f => f.id === selFish).name;
-                if (selVeg) statusText += ' + ' + vegOptions.find(v => v.id === selVeg).name;
+                if (!selectedDays[day]) {
+                    statusText = '不用訂餐';
+                } else if (selMeal) {
+                    statusText = dayMenu.find(m => m.id === selMeal).name;
+                } else if (selFish) {
+                    statusText = fishMenu.find(f => f.id === selFish).name;
+                }
+                if (selVeg && selectedDays[day]) statusText += ' + ' + vegOptions.find(v => v.id === selVeg).name;
 
                 html += `
                     <div class="daily-meal-section" id="day-section-${day}">
                         <div class="daily-meal-header" onclick="toggleDaySection('${day}')">
                             <div class="day-toggle ${selectedDays[day] ? 'active' : ''}" id="day-toggle-${day}"></div>
                             <span class="day-title">${dayNames[day]}</span>
-                            <span class="day-status" id="day-status-${day}">${selectedDays[day] ? statusText : '跳過這天'}</span>
+                            <span class="day-date">${dateStr}</span>
+                            <span class="day-status" id="day-status-${day}">${statusText}</span>
                         </div>
                         <div class="daily-meal-options ${selectedDays[day] ? '' : 'hidden'}" id="day-options-${day}">
                             <div class="daily-meal-grid">${mealCards}</div>
@@ -1703,11 +1815,18 @@
             if (selectedDays[day]) {
                 toggleEl.classList.add('active');
                 optionsEl.classList.remove('hidden');
-                statusEl.textContent = selectedMealsByDay[day] ? '已選擇' : '請選擇餐點';
+                const dayMenu = weeklyMenu[day];
+                const selMeal = selectedMealsByDay[day];
+                const selFish = selectedFishByDay[day];
+                const selVeg = selectedVegByDay[day];
+                if (selMeal) statusEl.textContent = dayMenu.find(m => m.id === selMeal).name;
+                else if (selFish) statusEl.textContent = fishMenu.find(f => f.id === selFish).name;
+                else statusEl.textContent = '請選擇餐點';
+                if (selVeg && (selMeal || selFish)) statusEl.textContent += ' + ' + vegOptions.find(v => v.id === selVeg).name;
             } else {
                 toggleEl.classList.remove('active');
                 optionsEl.classList.add('hidden');
-                statusEl.textContent = '跳過這天';
+                statusEl.textContent = '不用訂餐';
             }
         }
 
@@ -1781,8 +1900,10 @@
 
         // 確認訂購
         function confirmOrder() {
-            // 檢查是否有選擇要訂餐的日子
-            const selectedDayList = Object.keys(selectedDays).filter(d => selectedDays[d]);
+            // 只考慮可訂餐且已啟用的日子
+            const availableDays = getAvailableDays();
+            const selectedDayList = availableDays.filter(d => selectedDays[d]);
+
             if (selectedDayList.length === 0) {
                 alert('請至少選擇一天訂餐！');
                 return;
@@ -1908,7 +2029,8 @@
             selectedVegByDay = { mon: null, tue: null, wed: null, thu: null, fri: null };
             expandedFishByDay = { mon: false, tue: false, wed: false, thu: false, fri: false };
             expandedVegByDay = { mon: false, tue: false, wed: false, thu: false, fri: false };
-            selectedDays = { mon: true, tue: true, wed: true, thu: true, fri: true };
+            // 重置為可訂餐的日子
+            getAvailableDays().forEach(d => { selectedDays[d] = true; });
             currentDayMenu = 'mon';
             menuData = weeklyMenu.mon;
             document.getElementById('studentName').value = '';
