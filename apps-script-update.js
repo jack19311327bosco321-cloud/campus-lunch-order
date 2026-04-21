@@ -67,7 +67,7 @@ function doPost(e) {
 
 // 取得或建立學校專用 Sheet
 function getOrCreateSchoolSheet(schoolName) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = SpreadsheetApp.openById('1K19uUQ6oDxY2Zc3qdDyYASKyss6NJpgfIGO0A4t5i7U');
   var safeName = schoolName.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g, '').substring(0, 31);
 
   var sheet = ss.getSheetByName(safeName);
